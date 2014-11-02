@@ -1,2 +1,7 @@
 build
 .gradle
+.idea/artifacts
+.idea/libraries
+.idea/gradle.xml
+.idea/encodings.xml
+

@@ -1,44 +1,59 @@
+import org.gradle.api.plugins.jetty.internal.Monitor
+
 apply plugin: 'java'
 apply plugin: 'jetty'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
-dependencies{
-  compile 'org.ninjaframework:ninja-standalone:3.3.3'
-  testCompile 'org.ninjaframework:ninja-test-utilities:3.3.3'
+dependencies {
+    compile 'org.ninjaframework:ninja-standalone:3.3.3'
+    testCompile 'org.ninjaframework:ninja-test-utilities:3.3.3'
 }
 
 jettyRun {
-  contextPath = '/'
+    contextPath = '/'
+    stopKey = 'stop'
+    stopPort = 8081
+    doLast {
+        if (getStopPort() != null && getStopPort() > 0 && getStopKey() != null) {
+            Monitor monitor = new Monitor(getStopPort(), getStopKey(), server.getProxiedObject());
+            monitor.start();
+        }
+    }
+}
+
+jettyStop {
+    stopKey = 'stop'
+    stopPort = 8081
 }
 
 task fatJar(type: Jar) {
-  sourceSets {
-      main {
-          java {
-              srcDir 'src/main/java'
-          }
-          resources {
-              srcDir 'src/main/java'
-              include '**/*'
-              exclude '**/*.java'
-          }
-          resources {
-              srcDir 'src/main/resources'
-              include '**/*'
-          }
-      }
-  }
-	manifest {
-      attributes(
-        'Implementation-Title': 'ninjaframework-gradle',
-        'Implementation-Version': '0.1',
-        'Main-Class': 'ninja.standalone.NinjaJetty'
-      )
-  }
-  baseName = project.name + '-all'
-  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-  with jar
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/main/java'
+            }
+            resources {
+                srcDir 'src/main/java'
+                include '**/*'
+                exclude '**/*.java'
+            }
+            resources {
+                srcDir 'src/main/resources'
+                include '**/*'
+            }
+        }
+    }
+    manifest {
+        attributes(
+                'Implementation-Title': 'ninjaframework-gradle',
+                'Implementation-Version': '0.1',
+                'Main-Class': 'ninja.standalone.NinjaJetty'
+        )
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
